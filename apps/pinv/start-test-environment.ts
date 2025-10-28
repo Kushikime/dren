@@ -13,8 +13,10 @@ const monitoringProcess = spawn('pnpm', ['--filter', '@dren/monitoring', 'start'
   stdio: 'pipe',
   env: {
     ...process.env,
-    MONGO_URL: process.env.MONGO_URL || 'mongodb://dren_user:dren_password@localhost:27018',
-    DB_NAME: process.env.DB_NAME || 'dren',
+    MONGO_URL:
+      process.env.MONGO_URL ||
+      'mongodb://dren_user:dren_password@localhost:27018/dren_test?authSource=dren_test',
+    DB_NAME: process.env.DB_NAME || 'dren_test',
     PORT: '3001',
   },
 });
@@ -33,13 +35,15 @@ setTimeout(() => {
   console.log('📦 Starting test job population...');
 
   // Start test job population
-  const testProcess = spawn('tsx', ['test-job-population.ts'], {
+  const testProcess = spawn('pnpm', ['test-population'], {
     cwd: join(process.cwd(), 'apps/pinv'),
     stdio: 'inherit',
     env: {
       ...process.env,
-      MONGO_URL: process.env.MONGO_URL || 'mongodb://dren_user:dren_password@localhost:27018',
-      DB_NAME: process.env.DB_NAME || 'dren',
+      MONGO_URL:
+        process.env.MONGO_URL ||
+        'mongodb://dren_user:dren_password@localhost:27018/dren_test?authSource=dren_test',
+      DB_NAME: process.env.DB_NAME || 'dren_test',
     },
   });
 
