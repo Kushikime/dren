@@ -1,0 +1,37 @@
+{
+  "name": "dren",
+  "version": "0.1.0",
+  "description": "A database-agnostic job queue library for TypeScript",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "keywords": [
+    "job-queue",
+    "queue",
+    "jobs",
+    "background-jobs",
+    "task-queue",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "mongodb": "^6.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0"
+  }
+}

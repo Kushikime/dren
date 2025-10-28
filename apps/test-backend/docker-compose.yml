@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: dren-mongodb
+    ports:
+      - '27018:27017' # Custom port 27018 instead of default 27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: dren_test
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    restart: unless-stopped
+    networks:
+      - dren-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  dren-network:
+    driver: bridge

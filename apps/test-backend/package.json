@@ -1,0 +1,36 @@
+{
+  "name": "test-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch main.ts",
+    "start": "tsx main.ts",
+    "workers": "tsx main.ts",
+    "add-jobs": "tsx add-jobs.ts",
+    "stress-tests": "tsx stress-tests.ts",
+    "test-retry-bug": "tsx test-retry-bug-fix.ts",
+    "test-stuck-checker": "tsx test-stuck-job-checker.ts",
+    "always-running": "tsx always-running.ts",
+    "test-priority": "tsx test-priority-dependencies.ts",
+    "clean-db": "tsx clean-db.ts",
+    "db:start": "docker-compose up -d mongodb",
+    "db:stop": "docker-compose down",
+    "db:logs": "docker-compose logs -f mongodb",
+    "db:reset": "docker-compose down -v && docker-compose up -d mongodb"
+  },
+  "dependencies": {
+    "@types/uuid": "^11.0.0",
+    "dotenv": "^16.4.5",
+    "dren": "workspace:*",
+    "express": "^4.21.1",
+    "mongodb": "^6.10.0",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.6.0"
+  }
+}
