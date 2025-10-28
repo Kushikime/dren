@@ -5,10 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch main.ts",
-    "start": "tsx main.ts"
+    "start": "tsx main.ts",
+    "test-population": "tsx test-job-population.ts",
+    "test-environment": "tsx start-test-environment.ts",
+    "monitoring-example": "tsx monitoring-example.ts",
+    "archiver-example": "tsx archiver-example.ts"
   },
   "dependencies": {
     "dren": "workspace:*",
+    "@dren/monitoring": "workspace:*",
+    "@dren/archiver": "workspace:*",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {

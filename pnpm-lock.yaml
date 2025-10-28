@@ -46,6 +46,12 @@ importers:
 
   apps/pinv:
     dependencies:
+      '@dren/archiver':
+        specifier: workspace:*
+        version: link:../../packages/dren-archiver
+      '@dren/monitoring':
+        specifier: workspace:*
+        version: link:../../packages/dren-monitoring
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
