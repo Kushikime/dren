@@ -1,10 +1,10 @@
-import { Dren, type JobProcessor } from 'dren';
+import { Dren, type JobProcessor, type JobInput, type DatabaseConnection } from 'dren';
 import { drenConfig } from './src/config.js';
-import { ObjectId, type Db } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
 // Extend global to include drenConnection
 declare global {
-  var drenConnection: { db: Db } | undefined;
+  var drenConnection: DatabaseConnection | undefined;
 }
 
 /**
@@ -125,7 +125,13 @@ async function testRetryLogic() {
   console.log('\n🧪 Test Case 2: Retry Logic Stress Test');
   console.log('📊 Adding jobs with different retry scenarios...');
 
-  const retryJobs = [
+  const retryJobs: JobInput<{
+    testType: string;
+    shouldFail: boolean;
+    testId: string;
+    processingTimeMs: number;
+    failAfterAttempts?: number;
+  }>[] = [
     // Job that always fails (should be marked as failed after 3 retries)
     {
       name: 'stress-test',
@@ -438,7 +444,9 @@ async function runStressTests() {
     console.log('✅ Dren initialized successfully');
 
     // Store connection globally for monitoring
-    global.drenConnection = dren.connection;
+    if (dren.connection) {
+      global.drenConnection = dren.connection;
+    }
 
     // Start workers
     await dren.start();

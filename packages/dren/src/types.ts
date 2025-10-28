@@ -107,7 +107,7 @@ export interface DatabaseConfig {
  */
 export interface DrenConfig {
   database: DatabaseConfig;
-  jobConfigs: Map<string, JobConfig>; // Map for efficient job config lookup
+  jobConfigs: Map<string, JobConfig<any>>; // Map for efficient job config lookup
   workerOptions?: WorkerOptions;
 }
 

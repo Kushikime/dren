@@ -1,5 +1,6 @@
 import { Dren, type JobProcessor } from 'dren';
 import { drenConfig } from './src/config.js';
+import { ObjectId } from 'mongodb';
 
 /**
  * Test script to verify retry logic bug fix
@@ -98,7 +99,7 @@ async function testRetryBugFix() {
 
               // Show error history
               console.log('📋 Error history:');
-              job.errors.forEach((error, index) => {
+              job.errors.forEach((error: { attempt: number; error: string }, index: number) => {
                 console.log(`  ${index + 1}. Attempt ${error.attempt}: ${error.error}`);
               });
 

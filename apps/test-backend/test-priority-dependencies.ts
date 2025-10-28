@@ -1,11 +1,11 @@
-import { Dren, type JobProcessor } from 'dren';
+import { Dren, type JobProcessor, type DatabaseConnection } from 'dren';
 import { drenConfig } from './src/config.js';
 import { v4 as uuidv4 } from 'uuid';
 import { ObjectId, type Db, type Collection, type Document } from 'mongodb';
 
 // Extend global to include drenConnection
 declare global {
-  var drenConnection: { db: Db } | undefined;
+  var drenConnection: DatabaseConnection | undefined;
 }
 
 /**
@@ -195,7 +195,9 @@ async function initializeDren() {
   await dren.initialize();
 
   // Store connection globally for processor access
-  global.drenConnection = dren.connection;
+  if (dren.connection) {
+    global.drenConnection = dren.connection;
+  }
 
   return dren;
 }

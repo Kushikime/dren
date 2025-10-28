@@ -121,7 +121,7 @@ class MongoAdapter implements DatabaseAdapter {
  */
 export class Dren {
   private adapter: DatabaseAdapter;
-  private connection: DatabaseConnection | null = null;
+  public connection: DatabaseConnection | null = null;
   private jobRegistry: JobRegistry = new Map();
   private workerState: WorkerState = {
     isRunning: false,
@@ -383,7 +383,7 @@ export class Dren {
 
     // Check if there are ANY higher priority jobs still pending or processing
     // This prevents lower priority jobs from running
-    const higherPriorityQuery = {
+    const higherPriorityQuery: Record<string, unknown> = {
       $or: [
         {
           ...baseQuery,
