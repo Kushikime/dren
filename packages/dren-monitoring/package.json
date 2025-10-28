@@ -1,0 +1,39 @@
+{
+  "name": "@dren/monitoring",
+  "version": "0.1.0",
+  "description": "Monitoring and observability tools for Dren job queue",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "node dist/cli.js",
+    "cli": "node dist/cli.js"
+  },
+  "bin": {
+    "dren-monitoring": "./dist/cli.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "mongodb": "^6.3.0",
+    "chart.js": "^4.4.0",
+    "date-fns": "^2.30.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "dren": "workspace:*"
+  }
+}

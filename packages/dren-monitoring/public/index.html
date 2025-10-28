@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dren Job Queue Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .date-range {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        .info { color: #3b82f6; }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .job-types-table {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            padding: 1rem;
+            font-weight: bold;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .table-content {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Dren Job Queue Monitoring</h1>
+        <p>Real-time job processing analytics and performance metrics</p>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <div class="date-range">
+                <label for="startDate">From:</label>
+                <input type="datetime-local" id="startDate" class="date-input">
+                <label for="endDate">To:</label>
+                <input type="datetime-local" id="endDate" class="date-input">
+                <button onclick="loadDashboard()" class="btn">Load Dashboard</button>
+                <button onclick="setLast24Hours()" class="btn">Last 24 Hours</button>
+                <button onclick="setLast7Days()" class="btn">Last 7 Days</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            Loading dashboard data...
+        </div>
+
+        <div id="error" class="error-message" style="display: none;"></div>
+
+        <div id="dashboard" style="display: none;">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value info" id="totalJobs">-</div>
+                    <div class="metric-label">Total Jobs</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value success" id="successfulJobs">-</div>
+                    <div class="metric-label">Successful Jobs</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value error" id="failedJobs">-</div>
+                    <div class="metric-label">Failed Jobs</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value warning" id="pendingJobs">-</div>
+                    <div class="metric-label">Pending Jobs</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value info" id="avgProcessingTime">-</div>
+                    <div class="metric-label">Avg Processing Time (ms)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value success" id="successRate">-</div>
+                    <div class="metric-label">Success Rate (%)</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Processing Time by Job Type</div>
+                    <canvas id="processingTimeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Success Rate by Job Type</div>
+                    <canvas id="successRateChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Job Volume Over Time</div>
+                    <canvas id="jobVolumeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="job-types-table">
+                <div class="table-header">Job Type Performance</div>
+                <div class="table-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Job Type</th>
+                                <th>Total Jobs</th>
+                                <th>Success Rate</th>
+                                <th>Avg Time (ms)</th>
+                                <th>Min Time (ms)</th>
+                                <th>Max Time (ms)</th>
+                                <th>P95 Time (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobTypesTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let processingTimeChart, successRateChart, jobVolumeChart;
+
+        // Initialize with last 24 hours
+        window.onload = function() {
+            setLast24Hours();
+            loadDashboard();
+        };
+
+        function setLast24Hours() {
+            const now = new Date();
+            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            
+            document.getElementById('startDate').value = formatDateTimeLocal(yesterday);
+            document.getElementById('endDate').value = formatDateTimeLocal(now);
+        }
+
+        function setLast7Days() {
+            const now = new Date();
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('startDate').value = formatDateTimeLocal(weekAgo);
+            document.getElementById('endDate').value = formatDateTimeLocal(now);
+        }
+
+        function formatDateTimeLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        async function loadDashboard() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                showError('Please select both start and end dates');
+                return;
+            }
+
+            showLoading(true);
+            hideError();
+
+            try {
+                const response = await fetch(`/api/dashboard?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                updateDashboard(data);
+                showDashboard(true);
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showError('Failed to load dashboard data: ' + error.message);
+                showDashboard(false);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function updateDashboard(data) {
+            // Update metrics
+            document.getElementById('totalJobs').textContent = data.overallMetrics.totalJobs.toLocaleString();
+            document.getElementById('successfulJobs').textContent = data.overallMetrics.successfulJobs.toLocaleString();
+            document.getElementById('failedJobs').textContent = data.overallMetrics.failedJobs.toLocaleString();
+            document.getElementById('pendingJobs').textContent = data.overallMetrics.pendingJobs.toLocaleString();
+            document.getElementById('avgProcessingTime').textContent = Math.round(data.overallMetrics.averageProcessingTime).toLocaleString();
+            document.getElementById('successRate').textContent = data.overallMetrics.successRate.toFixed(1) + '%';
+
+            // Update charts
+            updateChart(processingTimeChart, data.processingTimeChart);
+            updateChart(successRateChart, data.successRateChart);
+            updateChart(jobVolumeChart, data.jobVolumeChart);
+
+            // Update job types table
+            updateJobTypesTable(data.jobTypeMetrics);
+        }
+
+        function updateChart(chart, data) {
+            if (chart) {
+                chart.destroy();
+            }
+            
+            const ctx = chart === processingTimeChart ? 'processingTimeChart' :
+                       chart === successRateChart ? 'successRateChart' : 'jobVolumeChart';
+            
+            chart = new Chart(document.getElementById(ctx), {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                        },
+                    },
+                },
+            });
+
+            if (ctx === 'processingTimeChart') processingTimeChart = chart;
+            else if (ctx === 'successRateChart') successRateChart = chart;
+            else if (ctx === 'jobVolumeChart') jobVolumeChart = chart;
+        }
+
+        function updateJobTypesTable(jobTypes) {
+            const tbody = document.getElementById('jobTypesTableBody');
+            tbody.innerHTML = '';
+
+            jobTypes.forEach(jobType => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = jobType.jobName;
+                row.insertCell(1).textContent = jobType.totalJobs.toLocaleString();
+                row.insertCell(2).textContent = jobType.successRate.toFixed(1) + '%';
+                row.insertCell(3).textContent = Math.round(jobType.averageProcessingTime).toLocaleString();
+                row.insertCell(4).textContent = Math.round(jobType.minProcessingTime).toLocaleString();
+                row.insertCell(5).textContent = Math.round(jobType.maxProcessingTime).toLocaleString();
+                row.insertCell(6).textContent = Math.round(jobType.p95ProcessingTime).toLocaleString();
+            });
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showDashboard(show) {
+            document.getElementById('dashboard').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
