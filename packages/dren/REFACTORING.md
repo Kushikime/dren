@@ -57,6 +57,38 @@ await dren.initialize();
 await dren.start();
 ```
 
+### **Job Processors with Return Values:**
+
+```typescript
+// Processors can now return any value that gets stored in the job result
+const myJobProcessor: JobProcessor<MyPayload> = async payload => {
+  console.log('Processing job:', payload);
+
+  // Do some work
+  const processedData = await processData(payload);
+
+  // Return any value - it will be stored in job.result
+  return {
+    processedAt: new Date(),
+    data: processedData,
+    status: 'completed',
+    metadata: { version: '1.0.0' },
+  };
+};
+
+// Or return simple values
+const simpleProcessor: JobProcessor<string> = async data => {
+  return `Processed: ${data}`;
+};
+
+// Or return nothing (undefined)
+const noResultProcessor: JobProcessor<any> = async payload => {
+  // Do work but don't return anything
+  await doWork(payload);
+  // No return statement - result will be undefined
+};
+```
+
 ### **Custom Error Handling:**
 
 ```typescript

@@ -15,6 +15,20 @@ const tmf637PostJobProcessor: JobProcessor<Tmf637PostJobPayload> = async (
   payload: Tmf637PostJobPayload
 ) => {
   console.log('Processing tmf637 post job', payload);
+
+  // Simulate some processing
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  // Return a result that will be stored in the job document
+  return {
+    processedAt: new Date(),
+    data: payload.data,
+    status: 'completed',
+    metadata: {
+      processor: 'tmf637',
+      version: '1.0.0',
+    },
+  };
 };
 
 jobConfigs.set(JobName.Tmf637PostJob, {

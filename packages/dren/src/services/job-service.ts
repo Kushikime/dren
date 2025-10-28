@@ -1,4 +1,3 @@
-import { ObjectId } from 'mongodb';
 import type { DatabaseAdapter, JobDocument, JobInput, JobConfig } from '../types.js';
 
 /**
@@ -76,12 +75,12 @@ export class JobService {
   }
 
   /**
-   * Mark job as succeeded
+   * Mark job as succeeded with optional result
    */
-  async markJobSucceeded(jobId: string, result?: { id: string; type: string }): Promise<void> {
+  async markJobSucceeded(jobId: string, result?: unknown): Promise<void> {
     await this.adapter.updateJobStatus(jobId, 'succeeded', {
       processedAt: new Date(),
-      result: result ? { id: new ObjectId(result.id), type: result.type } : undefined,
+      result,
     });
   }
 

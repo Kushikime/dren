@@ -36,10 +36,7 @@ export interface JobDocument<TPayload = unknown> {
   nextRunAt?: Date;
   lastRunAt?: Date;
   stuckAfter?: Date; // Computed field: when this job should be considered stuck (processedAt + maxRunningDurationMs)
-  result?: {
-    id: ObjectId;
-    type: string;
-  };
+  result?: unknown; // Flexible result field - can store any data returned by the processor
 }
 
 /**
@@ -48,7 +45,7 @@ export interface JobDocument<TPayload = unknown> {
 export type JobProcessor<TPayload = unknown> = (
   payload: TPayload,
   context: JobContext
-) => Promise<void>;
+) => Promise<unknown>; // Allow processors to return any value
 
 /**
  * Context provided to job processors during execution

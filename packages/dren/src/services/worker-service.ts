@@ -133,19 +133,22 @@ export class WorkerService {
 
       console.log(`🔄 Processing job ${jobId} (${job.name}) - attempt ${job.attempts}`);
 
-      // Execute the job processor
-      await (jobConfig.processor as JobProcessor)(job.payload, {
+      // Execute the job processor and capture the result
+      const result = await (jobConfig.processor as JobProcessor)(job.payload, {
         jobId,
         attempt: job.attempts,
         jobType: job.name,
       });
 
-      // Job succeeded
+      // Job succeeded - store the result if any
       await this.adapter.updateJobStatus(jobId, 'succeeded', {
         processedAt: new Date(),
+        result: result !== undefined ? result : undefined,
       });
 
-      console.log(`✅ Job ${jobId} completed successfully`);
+      console.log(
+        `✅ Job ${jobId} completed successfully${result !== undefined ? ' with result' : ''}`
+      );
     } catch (error) {
       console.error(`❌ Job ${jobId} failed:`, error);
 
