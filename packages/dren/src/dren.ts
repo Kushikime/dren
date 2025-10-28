@@ -552,6 +552,19 @@ export class Dren {
     const jobConfig = this.jobRegistry.get(job.name);
     if (!jobConfig) return;
 
+    // Check if custom error handler is provided
+    const customErrorHandler = this.config.workerOptions?.customErrorHandler;
+    if (customErrorHandler) {
+      try {
+        await customErrorHandler(error, job, this.connection);
+        return; // Custom handler took care of everything
+      } catch (handlerError) {
+        console.error('❌ Custom error handler failed:', handlerError);
+        // Fall through to default error handling
+      }
+    }
+
+    // Default error handling
     const errorEntry = {
       attempt: job.attempts,
       error: error.message,

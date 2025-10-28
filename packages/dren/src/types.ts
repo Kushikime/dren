@@ -90,6 +90,11 @@ export interface WorkerOptions {
   concurrency?: number; // Default: 1
   jobNames?: string[]; // If specified, only process these job names
   stuckJobTimeoutMs?: number; // Default: 24 hours - jobs stuck longer than this will be reset to pending
+  customErrorHandler?: CustomErrorHandler;
+}
+
+export interface CustomErrorHandler {
+  (error: Error, job: JobDocument, dbClient: DatabaseConnection): Promise<void>;
 }
 
 /**
