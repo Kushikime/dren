@@ -1,4 +1,4 @@
-import { MongoClient, Db, Collection, ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
 /**
  * Job status enum
@@ -36,6 +36,10 @@ export interface JobDocument<TPayload = unknown> {
   nextRunAt?: Date;
   lastRunAt?: Date;
   stuckAfter?: Date; // Computed field: when this job should be considered stuck (processedAt + maxRunningDurationMs)
+  result?: {
+    id: ObjectId;
+    type: string;
+  };
 }
 
 /**
@@ -94,7 +98,7 @@ export interface WorkerOptions {
 }
 
 export interface CustomErrorHandler {
-  (error: Error, job: JobDocument, dbClient: DatabaseConnection): Promise<void>;
+  (error: Error, job: JobDocument, adapter: DatabaseAdapter): Promise<void>;
 }
 
 /**
@@ -130,10 +134,9 @@ export interface WorkerState {
  * Database connection interface - will be extended for different DB types
  */
 export interface DatabaseConnection {
-  type: 'mongodb';
-  client: MongoClient;
-  db: Db;
-  collection: Collection<JobDocument>;
+  type: string;
+  adapter: DatabaseAdapter;
+  isConnected(): boolean;
 }
 
 /**
@@ -141,8 +144,33 @@ export interface DatabaseConnection {
  */
 export interface DatabaseAdapter {
   connect(): Promise<DatabaseConnection>;
-  createIndexes(): Promise<void>;
   disconnect(): Promise<void>;
+  createIndexes(): Promise<void>;
+
+  // Job CRUD operations
+  createJob<T>(jobDoc: Omit<JobDocument<T>, '_id'>): Promise<string>;
+  createJobs<T>(jobDocs: Omit<JobDocument<T>, '_id'>[]): Promise<string[]>;
+  findJobById(jobId: string): Promise<JobDocument | null>;
+  findJobsByStatus(status: JobStatus, limit?: number): Promise<JobDocument[]>;
+  findJobsByPriority(maxPriority: number): Promise<JobDocument[]>;
+  findStuckJobs(): Promise<JobDocument[]>;
+
+  // Job updates
+  updateJobStatus(jobId: string, status: JobStatus, updates?: Partial<JobDocument>): Promise<void>;
+  incrementJobAttempts(jobId: string): Promise<void>;
+  addJobError(
+    jobId: string,
+    error: { attempt: number; error: string; timestamp: Date; stackTrace: string }
+  ): Promise<void>;
+  setJobNextRunAt(jobId: string, nextRunAt: Date): Promise<void>;
+
+  // Atomic operations
+  findAndLockJob(jobNames?: string[]): Promise<JobDocument | null>;
+  resetStuckJobs(): Promise<number>;
+
+  // Collection management
+  getCollectionName(): string;
+  getDatabaseName(): string;
 }
 
 /**

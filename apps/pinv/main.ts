@@ -1,6 +1,6 @@
 import { Dren } from 'dren';
 import { jobConfigs } from './job-configs';
-import { JobDocument, DatabaseConnection } from 'dren';
+import { JobDocument, DatabaseAdapter } from 'dren';
 
 const main = async () => {
   const dren = new Dren({
@@ -13,7 +13,7 @@ const main = async () => {
     workerOptions: {
       pollIntervalMs: 1000,
       concurrency: 1,
-      customErrorHandler: async (error: Error, job: JobDocument, dbClient: DatabaseConnection) => {
+      customErrorHandler: async (error: Error, job: JobDocument, adapter: DatabaseAdapter) => {
         console.error('Error in job', error.message);
 
         console.error('Job', job);
@@ -25,10 +25,9 @@ const main = async () => {
           stackTrace: error.stack || '',
         };
 
-        await dbClient.collection.updateOne(
-          { _id: job._id },
-          { $set: { status: 'failed', errors: [...job.errors, customErrorWrapper] } }
-        );
+        // Use the adapter to update the job
+        await adapter.addJobError(job._id.toString(), customErrorWrapper);
+        await adapter.updateJobStatus(job._id.toString(), 'failed');
       },
     },
   });
