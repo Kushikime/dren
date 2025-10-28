@@ -1,0 +1,35 @@
+{
+  "name": "@dren/archiver",
+  "version": "0.1.0",
+  "description": "Job archiving and cleanup utilities for Dren job queue",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "node dist/cli.js",
+    "cli": "node dist/cli.js"
+  },
+  "bin": {
+    "dren-archiver": "./dist/cli.js"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node-cron": "^3.0.11",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "dren": "workspace:*"
+  }
+}
