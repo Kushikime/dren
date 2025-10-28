@@ -1,6 +1,11 @@
 import { Dren, type JobProcessor } from 'dren';
 import { drenConfig } from './src/config.js';
-import { ObjectId } from 'mongodb';
+import { ObjectId, type Db } from 'mongodb';
+
+// Extend global to include drenConnection
+declare global {
+  var drenConnection: { db: Db } | undefined;
+}
 
 /**
  * Comprehensive stress tests for Dren job queue system
@@ -43,7 +48,7 @@ const stressTestProcessor: JobProcessor<{
   console.log(`✅ [${testType}] Job ${context.jobId} completed successfully - Test ID: ${testId}`);
 
   // Store result in results collection
-  const resultsCollection = (global as any).drenConnection?.db.collection('results');
+  const resultsCollection = global.drenConnection?.db.collection('results');
   if (resultsCollection) {
     const resultRecord = {
       testType,
@@ -361,11 +366,11 @@ async function monitorJobCompletion(testType: string, expectedCount: number) {
 
   const checkInterval = setInterval(async () => {
     try {
-      const resultsCollection = (global as any).drenConnection?.db.collection('results');
+      const resultsCollection = global.drenConnection?.db.collection('results');
       if (resultsCollection) {
         const completed = await resultsCollection.countDocuments({ testType });
         const failed =
-          (await (global as any).drenConnection?.collection.countDocuments({
+          (await global.drenConnection?.collection.countDocuments({
             status: 'failed',
             'payload.testType': testType,
           })) || 0;
@@ -405,7 +410,7 @@ async function verifyMetadataStored(jobIds: string[]) {
 
   try {
     for (const jobId of jobIds) {
-      const job = await (global as any).drenConnection?.collection.findOne({
+      const job = await global.drenConnection?.collection.findOne({
         _id: new ObjectId(jobId),
       });
 
@@ -433,7 +438,7 @@ async function runStressTests() {
     console.log('✅ Dren initialized successfully');
 
     // Store connection globally for monitoring
-    (global as any).drenConnection = dren.connection;
+    global.drenConnection = dren.connection;
 
     // Start workers
     await dren.start();

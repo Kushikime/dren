@@ -1,19 +1,24 @@
 import { Dren, type JobProcessor } from 'dren';
 import { drenConfig } from './src/config.js';
 import { v4 as uuidv4 } from 'uuid';
-import { ObjectId } from 'mongodb';
+import { ObjectId, type Db, type Collection, type Document } from 'mongodb';
+
+// Extend global to include drenConnection
+declare global {
+  var drenConnection: { db: Db } | undefined;
+}
 
 /**
  * Results repository for storing job results
  */
 class ResultsRepository {
-  private collection: any;
+  private collection: Collection;
 
-  constructor(private db: any) {
+  constructor(private db: Db) {
     this.collection = db.collection('results');
   }
 
-  async createResult(data: any): Promise<string> {
+  async createResult(data: Record<string, unknown>): Promise<string> {
     const result = {
       ...data,
       createdAt: new Date(),
@@ -23,11 +28,11 @@ class ResultsRepository {
     return insertResult.insertedId.toString();
   }
 
-  async findByUuid(uuid: string): Promise<any[]> {
+  async findByUuid(uuid: string): Promise<Document[]> {
     return await this.collection.find({ uuid }).toArray();
   }
 
-  async getResult(id: string): Promise<any> {
+  async getResult(id: string): Promise<Document | null> {
     return await this.collection.findOne({ _id: new ObjectId(id) });
   }
 }
@@ -54,7 +59,10 @@ const jobAProcessor: JobProcessor<{ uuid: string }> = async (payload, context) =
     processedAt: new Date(),
   };
 
-  const resultsRepo = new ResultsRepository((global as any).drenConnection.db);
+  if (!global.drenConnection) {
+    throw new Error('Dren connection not available');
+  }
+  const resultsRepo = new ResultsRepository(global.drenConnection.db);
   const resultId = await resultsRepo.createResult(resultData);
 
   console.log(
@@ -84,7 +92,10 @@ const jobBProcessor: JobProcessor<{ uuid: string }> = async (payload, context) =
     processedAt: new Date(),
   };
 
-  const resultsRepo = new ResultsRepository((global as any).drenConnection.db);
+  if (!global.drenConnection) {
+    throw new Error('Dren connection not available');
+  }
+  const resultsRepo = new ResultsRepository(global.drenConnection.db);
   const resultId = await resultsRepo.createResult(resultData);
 
   console.log(
@@ -104,7 +115,10 @@ const sumProcessor: JobProcessor<{ uuid: string }> = async (payload, context) =>
   // Simulate 10 seconds of work
   await new Promise(resolve => setTimeout(resolve, 10000));
 
-  const resultsRepo = new ResultsRepository((global as any).drenConnection.db);
+  if (!global.drenConnection) {
+    throw new Error('Dren connection not available');
+  }
+  const resultsRepo = new ResultsRepository(global.drenConnection.db);
 
   // Find records A and B for this UUID
   const records = await resultsRepo.findByUuid(payload.uuid);
@@ -181,7 +195,7 @@ async function initializeDren() {
   await dren.initialize();
 
   // Store connection globally for processor access
-  (global as any).drenConnection = (dren as any).connection;
+  global.drenConnection = dren.connection;
 
   return dren;
 }
@@ -248,9 +262,9 @@ async function monitorPriorityProcessing(dren: Dren, testUuid: string) {
   const checkInterval = 3000; // Check every 3 seconds
 
   const monitor = setInterval(async () => {
-    if (!(global as any).drenConnection) return;
+    if (!global.drenConnection) return;
 
-    const db = (global as any).drenConnection.db;
+    const db = global.drenConnection.db;
     const resultsRepo = new ResultsRepository(db);
 
     // Check job status

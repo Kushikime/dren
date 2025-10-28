@@ -359,7 +359,7 @@ export class Dren {
     const now = new Date();
 
     // Build base query for available jobs
-    const baseQuery: any = {
+    const baseQuery: Record<string, unknown> = {
       status: 'pending',
       $or: [{ nextRunAt: { $exists: false } }, { nextRunAt: { $lte: now } }],
     };
@@ -453,7 +453,8 @@ export class Dren {
 
     for (const job of stuckJobs) {
       const maxRunningDurationMs = job.maxRunningDurationMs || 300000; // Default 5 minutes
-      const runningDuration = now.getTime() - job.processedAt!.getTime();
+      if (!job.processedAt) continue; // Skip jobs without processedAt
+      const runningDuration = now.getTime() - job.processedAt.getTime();
 
       console.warn(
         `⚠️  Job ${job._id} (${job.name}) has been running for ${Math.round(runningDuration / 1000)}s (max: ${Math.round(maxRunningDurationMs / 1000)}s), resetting to pending`

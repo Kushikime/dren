@@ -10,7 +10,10 @@ const execAsync = promisify(exec);
 /**
  * System info job processor
  */
-const systemInfoProcessor = async (payload: { command: string }, context: any) => {
+const systemInfoProcessor = async (
+  payload: { command: string },
+  context: { jobId: string; attempt: number }
+) => {
   console.log(`🖥️  Processing job ${context.jobId}: ${payload.command}`);
 
   const { stdout, stderr } = await execAsync(payload.command);
